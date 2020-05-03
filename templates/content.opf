@@ -13,19 +13,31 @@
     </metadata>
 
 <manifest>
+{% if meta.cover %}
+    <item id="cover" media-type="image/jpeg" href="{{meta.cover}}"/>{% endif %}
     <item id="ncx" media-type="application/x-dtbncx+xml" href="book.ncx"/>
-    <item id="book" media-type="application/xhtml+xml" href="book.html" />
-    {% if meta.cover %}
-    <item id="cover" media-type="image/jpeg" href="{{meta.cover}}"/>
-    {% endif %}
+    <item id="book-welcome" media-type="application/xhtml+xml" href="welcome.html" />
+
+{% for chapter in meta.chapters %}
+    <item id="book-chapter-{{chapter.idx}}" media-type="application/xhtml+xml" href="text/book-chapter-{{chapter.idx}}.html" />{% for section in chapter.sections %}
+    <item id="book-section-{{section.idx}}" media-type="application/xhtml+xml" href="text/book-section-{{section.idx}}.html" />{% endfor %}{% endfor %}
+
+{% for section in meta.sections %}
+    <item id="book-section-{{section.idx}}" media-type="application/xhtml+xml" href="text/book-section-{{section.idx}}.html" />{% endfor %}
+
 </manifest>
 <spine toc="ncx">
-    <itemref idref="book"/>
+    <itemref idref="book-welcome"/>
+{% for chapter in meta.chapters %}
+    <itemref idref="book-chapter-{{chapter.idx}}" />
+{% for section in chapter.sections %}
+    <itemref idref="book-section-{{section.idx}}" />{% endfor %}{% endfor %}
+{% for section in meta.sections %}
+    <itemref idref="book-section-{{section.idx}}" />{% endfor %}
 </spine>
 
 <guide>
-    <reference type="toc" title="目录" href="book.html#toc"></reference>
-    <reference type="text" title="扉页" href="book.html#welcome"></reference>
+    <reference type="text" title="扉页" href="welcome.html"></reference>
 </guide>
 
 </package>

@@ -11,44 +11,24 @@
 <docTitle><text>{{meta.title}}</text></docTitle>
 <docAuthor><text>{{meta.author}}</text></docAuthor>
 <navMap>
-    <navPoint class="toc" id="toc" playOrder="1">
-        <navLabel>
-            <text>目录</text>
-        </navLabel>
-        <content src="book.html#toc"/>
+    <navPoint class="welcome" id="welcome" playOrder="1">
+        <navLabel> <text>扉页</text> </navLabel>
+        <content src="welcome.html"/>
     </navPoint>
-    <navPoint class="welcome" id="welcome" playOrder="2">
-        <navLabel>
-            <text>扉页</text>
-        </navLabel>
-        <content src="book.html#welcome"/>
-    </navPoint>
-    {% set order = 3 %}
-    {% for chapter in meta.chapters %}
-    <navPoint class="chapter" id="chapter-{{loop.index}}" playOrder="{{order}}">
-        <navLabel>
-            <text>{{chapter.name}}</text>
-        </navLabel>
-        <content src="book.html#chapter-{{loop.index}}"/>
-        {% set out_loop = loop %}
-        {% for section in chapter.sections %}
-        <navPoint class="section" id="section-{{out_loop.index}}-{{loop.index}}" playOrder="{{order+loop.index}}">
-            <navLabel>
-                <text>{{section.name}}</text>
-            </navLabel>
-            <content src="book.html#section-{{out_loop.index}}-{{loop.index}}"/>
-        </navPoint>
-        {% endfor %}
-        {% set order = order + 1 + chapter.sections|length %}
-    </navPoint>
-    {% endfor %}
-    <!--
-    <navPoint class="appendix" id="appendix" playOrder="48">
-        <navLabel>
-            <text>Appendix: Specifications</text>
-        </navLabel>
-        <content src="Specifications.html"/>
-    </navPoint>
-    -->
+    {% set order = 2 %}{% for chapter in meta.chapters %}
+    <navPoint class="chapter" id="chapter-{{chapter.idx}}" playOrder="{{order}}">
+        <navLabel> <text>{{chapter.name}}</text> </navLabel>
+        <content src="text/book-chapter-{{chapter.idx}}.html"/>{% for section in chapter.sections %}
+        <navPoint class="section" id="section-{{section.idx}}" playOrder="{{order}}">
+            <navLabel> <text>{{section.name}}</text> </navLabel>
+            <content src="text/book-section-{{section.idx}}.html"/>{% set order = order+1 %}
+        </navPoint>{% endfor %}
+    </navPoint>{% endfor %}
+
+    {% set order = 2 %}{% for section in meta.sections %}
+    <navPoint class="section" id="section-{{section.idx}}" playOrder="{{order}}">
+        <navLabel> <text>{{section.name}}</text> </navLabel>
+        <content src="text/book-section-{{section.idx}}.html"/>{% set order = order+1 %}
+    </navPoint>{% endfor %}
 </navMap>
 </ncx>
