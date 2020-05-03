@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>{{ meta.title }}</title>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+        <meta name="author" content="{{meta.author}}" />
+        <meta name="generator" content="Karl Marx" />
+        <meta name="language" content="zh_CN"/>
+        <style type="text/css">
+            .title{font-size: 2em; margin-top: 1em; margin-bottom: 1em;}
+            .author{font-style: italic; text-align: right;}
+            .chapter{font-size: 1.5em; margin; 1em;}
+            .section{font-size: 1.2em; margin-top: 1em;}
+        </style>
+    </head>
+    <body>
+        <div id="toc">
+            <div id="book">
+                <center>
+                    <h2>目录</h2>
+                </center>
+                {% for chapter in meta.chapters %}
+                <h3><a href='#chapter-{{loop.index}}'>{{ chapter.name }}</a></h3>
+                <ul>{% set out_loop = loop %}{% for section in chapter.sections %}
+                <li><a href="#section-{{out_loop.index}}-{{loop.index}}">{{ section.name }}</a></li>{% endfor %}
+                </ul>{% endfor %}
+            </div>
+        </div><!-- end toc -->
+
+        <div id="welcome">
+            <center>
+                <h1 class='title'>{{ meta.title }}</h1>
+                <p class='author' text-align='right'>{{ meta.author }} 著</p>
+            </center>
+            <div id='brief'>{% for para in meta.brief %}
+                <p>{{ para|e }}</p>{% endfor %}
+            </div>
+        </div>
+
+        <div id="content">{% for chapter in meta.chapters %}
+            <center>
+                <h2 class='chapter' id='chapter-{{loop.index}}'>{{ chapter.name }}</h2>
+            </center>
+            <div class='content-chapter'>{% set section = chapter.default %}{% if section.paras %}
+                <div class='content-section'>{% for para in section.paras %}
+                    <p>{{ para|e }}</p>{% endfor %}
+                </div>
+                {% endif %}
+                {% set out_loop = loop %}{% for section in chapter.sections %}
+                <h3 class='section' id="section-{{out_loop.index}}-{{loop.index}}">{{ section.name }}</h3>
+                <div class='content-section'>{% for para in section.paras %}
+                    <p>{{ para|e }}</p>{% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+        </div>
+    </body>
+</html>

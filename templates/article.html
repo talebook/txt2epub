@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <head>
+        <title>{{ meta.title }}</title>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+        <meta name="author" content="{{meta.author}}" />
+        <meta name="generator" content="Karl Marx">
+        <style type="text/css">
+            .title{font-size: 2em; margin-top: 1em; margin-bottom: 1em;}
+            .author{font-style: italic; text-align: right;}
+            .chapter{font-size: 1.5em; margin; 1em;}
+            .section{font-size: 1.2em; margin-top: 1em;}
+        </style>
+    </head>
+    <body>
+        <div id="toc">
+            <center><h2>目录</h2></center>
+            <ul>{% for name, paras in meta.sections %}
+                <li><a href="#section-{{loop.index}}">{{ name }}</a></li>{% endfor %}
+            </ul>
+        </div><!-- end toc -->
+        <mbp:pagebreak></mbp:pagebreak>
+
+        <div id="welcome">
+            <center>
+                <h1 class='title'>{{ meta.title }}</h1>
+                <p class='author' text-align='right'>{{ meta.author }} 著</p>
+                {% if 'translator' in meta %}<p class='author' text-align='right'>{{ meta.translator}} 译</p>{% endif %}
+            </center>
+            <br/>
+            <div id='brief'>{% for para in meta.brief %}
+                <p>{{ para }}</p>{% endfor %}
+            </div>
+        </div>
+        <mbp:pagebreak></mbp:pagebreak>
+
+        <div id="content">
+            {% for name, paras in meta.sections %}
+            <h3 class='section' id="section-{{loop.index}}">{{ name }}</h3>
+            <div class='content-section'>{% for para in paras %}
+                <p>{{ para }}</p>{% endfor %}
+            </div>
+            {% endfor %}
+        <mbp:pagebreak></mbp:pagebreak>
+        </div>
+    </body>
+</html>

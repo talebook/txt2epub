@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="BookId">
+    <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+        <dc:title>{{meta.title}}</dc:title>
+        <dc:language>zh-cn</dc:language>
+        <dc:identifier id="BookId" opf:scheme="ISBN">{{meta.isbn}}</dc:identifier>
+        <dc:creator>{{meta.author}}</dc:creator>
+        <dc:publisher>互联网</dc:publisher>
+        <dc:subject>Novel</dc:subject>
+        <dc:date>{{meta.date}}</dc:date>
+        <dc:description>{{meta.brief|join("")}}</dc:description>
+        <meta name="cover" content="cover" />
+    </metadata>
+
+<manifest>
+    <item id="ncx" media-type="application/x-dtbncx+xml" href="book.ncx"/>
+    <item id="book" media-type="application/xhtml+xml" href="book.html" />
+    {% if meta.cover %}
+    <item id="cover" media-type="image/jpeg" href="{{meta.cover}}"/>
+    {% endif %}
+</manifest>
+<spine toc="ncx">
+    <itemref idref="book"/>
+</spine>
+
+<guide>
+    <reference type="toc" title="目录" href="book.html#toc"></reference>
+    <reference type="text" title="扉页" href="book.html#welcome"></reference>
+</guide>
+
+</package>
