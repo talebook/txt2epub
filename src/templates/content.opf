@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="BookId">
+    <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+        <dc:title>{{meta.title}}</dc:title>
+        <dc:language>zh-cn</dc:language>
+        <dc:identifier id="BookId" opf:scheme="ISBN">{{meta.isbn}}</dc:identifier>
+        <dc:creator>{{meta.author}}</dc:creator>
+        <dc:publisher>互联网</dc:publisher>
+        <dc:subject>Novel</dc:subject>
+        <dc:date>{{meta.date}}</dc:date>
+        <dc:description>{{meta.brief|join("")}}</dc:description>
+        <meta name="cover" content="cover" />
+    </metadata>
+
+<manifest>
+{% if meta.cover %}
+    <item id="cover" media-type="image/jpeg" href="{{meta.cover}}"/>{% endif %}
+    <item id="ncx" media-type="application/x-dtbncx+xml" href="book.ncx"/>
+    <item id="book-welcome" media-type="application/xhtml+xml" href="welcome.html" />
+
+{% for chapter in meta.chapters %}
+    <item id="book-chapter-{{chapter.idx}}" media-type="application/xhtml+xml" href="text/book-chapter-{{chapter.idx}}.html" />{% for section in chapter.sections %}
+    <item id="book-section-{{section.idx}}" media-type="application/xhtml+xml" href="text/book-section-{{section.idx}}.html" />{% endfor %}{% endfor %}
+
+{% for section in meta.sections %}
+    <item id="book-section-{{section.idx}}" media-type="application/xhtml+xml" href="text/book-section-{{section.idx}}.html" />{% endfor %}
+
+</manifest>
+<spine toc="ncx">
+    <itemref idref="book-welcome"/>
+{% for chapter in meta.chapters %}
+    <itemref idref="book-chapter-{{chapter.idx}}" />
+{% for section in chapter.sections %}
+    <itemref idref="book-section-{{section.idx}}" />{% endfor %}{% endfor %}
+{% for section in meta.sections %}
+    <itemref idref="book-section-{{section.idx}}" />{% endfor %}
+</spine>
+
+<guide>
+    <reference type="text" title="扉页" href="welcome.html"></reference>
+</guide>
+
+</package>

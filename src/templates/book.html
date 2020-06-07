@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+{% if action == "chapter" %}<title>{{ chapter.name }}</title>
+{% elif action == "section" %}<title>{{ section.name }}</title>
+{% else %}<title>{{ meta.title }}</title>{% endif %}
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta name="author" content="{{meta.author}}" />
+    <meta name="generator" content="Karl Marx" />
+    <meta name="language" content="zh_CN"/>
+    <style type="text/css">
+        .title{font-size: 2em; margin-top: 1em; margin-bottom: 1em;}
+        .author{font-style: italic; text-align: right;}
+        .chapter{font-size: 1.5em; margin; 1em;}
+        .section{font-size: 1.2em; margin-top: 1em;}
+    </style>
+</head>
+<body>
+{% if action == "welcome" %}
+    <div id="welcome">
+        <center>
+            <h1 class='title'>{{ meta.title }}</h1>
+            <p class='author' text-align='right'>{{ meta.author }} 著</p>
+        </center>
+        <div id='brief'>{% for para in meta.brief %}
+            <p>{{ para|e }}</p>{% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+{% if action == "chapter" %}
+    <center>
+        <h2 class='chapter' id='chapter-{{chapter.idx}}'>{{ chapter.name }}</h2>
+    </center>{% set section = chapter.default %}{% if section.paras|length > 0 %}
+    <div class='content-chapter'>
+        <div class='content-section'>{% for para in section.paras %}
+            <p>{{ para|e }}</p>{% endfor %}
+        </div>
+    </div>{% endif %}
+{% endif %}
+
+{% if action == "section" %}
+    <h3 class='section' id="section-{{section.idx}}">{{ section.name }}</h3>
+    <div class='content-section'>{% for para in section.paras %}
+        <p>{{ para|e }}</p>{% endfor %}
+    </div>
+{% endif %}
+</body>
+</html>
