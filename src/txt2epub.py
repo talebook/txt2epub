@@ -5,7 +5,7 @@ import sys, os, re, time, pkgutil, logging, fileinput, click, subprocess, zipfil
 from jinja2 import Template, Environment, PackageLoader
 from datetime import datetime
 
-__version__ = "1.0"
+__version__ = "1.1"
 
 RE_CHAPTER_AND_SECTIONS=[
         u'.*(第.*[卷章部分][ 　：].*)[ 　：](第.*[章节][ 　：]*.*)$',
