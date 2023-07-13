@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #-*- coding:utf-8 -*-
 
 from setuptools import setup, find_packages
 
 setup(
     name             = "txt2epub",
-    version          = "1.0.0",
+    version          = "1.0.3",
     url              = "https://github.com/talebook/txt2epub",
     author           = 'Rex Liao',
     author_email     = 'talebook@foxmail.com',
