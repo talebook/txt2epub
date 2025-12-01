@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
 import sys, os, re, time, pkgutil, logging, fileinput, click, subprocess, zipfile
@@ -45,7 +45,13 @@ class App:
 
     def get_tpl(self, filename):
         from pkg_resources import resource_string
-        s = resource_string(__name__, filename).decode("UTF-8")
+        try:
+            s = resource_string(__name__, filename).decode("UTF-8")
+        except Exception:
+            base = os.path.dirname(__file__)
+            path = os.path.join(base, filename)
+            with open(path, "r", encoding="UTF-8") as fp:
+                s = fp.read()
         return Template(s)
 
     def idx(self):
@@ -56,7 +62,7 @@ class App:
 
         def F(name):
             z = zipfile.ZipInfo(name)
-            z.external_attr = 0666 << 16L
+            z.external_attr = 0o666 << 16
             z.compress_type = zipfile.ZIP_DEFLATED
             return z
 
@@ -117,140 +123,139 @@ class App:
         chapter = {'idx': 0, 'name': '_', 'sections': [], 'default': section}
         line_style = LINE_STYLE_AUTO
 
-        for raw in fileinput.input(txt_file):
-            try:
-                raw = raw.decode('utf-8')
-            except:
-                raw = raw.decode('gb18030')
-            line = raw.replace('\r', '\n').replace('\t', ' ').strip()
+        with open(txt_file, 'rb') as fin:
+            for raw in fin:
+                try:
+                    raw_text = raw.decode('utf-8')
+                except Exception:
+                    raw_text = raw.decode('gb18030')
+                line = raw_text.replace('\r', '\n').replace('\t', ' ').strip()
 
-            if len(line) < 2: continue
+                if len(line) < 2:
+                    continue
 
-            if line.startswith(u'《') and not meta['title']:
-                line = line.split(u'》')[0].strip().replace(u'《', '#title:')
+                if line.startswith(u'《') and not meta['title']:
+                    line = line.split(u'》')[0].strip().replace(u'《', '#title:')
 
-            m = re.match(RE_TITLE_1, line)
-            if m is not None and not meta['title']:
-                line = '#title:' + m.groups()[0]
-            m = re.match(RE_TITLE_2, line)
-            if m is not None and not meta['title']:
-                line = '#title:' + m.groups()[0]
+                m = re.match(RE_TITLE_1, line)
+                if m is not None and not meta['title']:
+                    line = '#title:' + m.groups()[0]
+                m = re.match(RE_TITLE_2, line)
+                if m is not None and not meta['title']:
+                    line = '#title:' + m.groups()[0]
 
-            for tag_from, tag_to in TAG_REPLACE:
-                if line.startswith(tag_from):
-                    if tag_to.startswith("##"):
-                        line = tag_to + line
+                for tag_from, tag_to in TAG_REPLACE:
+                    if line.startswith(tag_from):
+                        if tag_to.startswith("##"):
+                            line = tag_to + line
+                        else:
+                            line = line.replace(tag_from, tag_to)
+
+                m = re.match(u'#([a-z]+):(.*)', line)
+                if m is not None:
+                    tag, val = m.groups()
+                    meta[tag] = val.strip()
+                    continue
+
+                m = re.match(u'##([a-z]+):(.*)', line)
+                if m is not None:
+                    line_style = LINE_STYLE_AUTO
+                    tag, val = m.groups()
+                    paras = []
+                    meta[tag] = paras
+                    continue
+
+                chapter_name = None
+                section_name = None
+                m = re.match(u'#@([a-z]+)(:：)(.*)', line)
+                if m is not None:
+                    tag, _, val = m.groups()
+                    if tag == 'chapter':
+                        chapter_name = val
+                    if tag == 'section':
+                        section_name = val
+
+                while True:
+                    m = None
+                    for r in RE_CHAPTER_AND_SECTIONS:
+                        m = re.match(r, line)
+                        if m:
+                            break
+                    if m is not None:
+                        vals = m.groups()
+                        chapter_name = vals[0]
+                        section_name = vals[1]
+                        break
+
+                    m = None
+                    for r in RE_CHAPTERS:
+                        m = re.match(r, line)
+                        if m:
+                            break
+                    if m is not None:
+                        chapter_name = m.groups()[0]
+                        break
+
+                    m = None
+                    for r in RE_SECTIONS:
+                        m = re.match(r, line)
+                        if m:
+                            break
+
+                    if m is not None:
+                        section_name = m.groups()[0]
+                        break
+                    break
+
+                if chapter_name:
+                    chapter_name = chapter_name.strip().replace("  ", " ").replace("  ", " ")
+                    if chapter_name != chapter['name']:
+                        logging.debug(u'chapter: %s' % chapter_name)
+                        tag = None
+                        paras = []
+                        section = {'idx': self.idx(), 'name': u'_', 'paras': paras}
+                        chapter = {
+                            'idx': len(meta['chapters']),
+                            'name': chapter_name,
+                            'sections': [],
+                            'default': section
+                        }
+                        meta['chapters'].append(chapter)
+                        line_style = LINE_STYLE_AUTO
+
+                if section_name:
+                    section_name = section_name.strip().replace("  ", " ").replace("  ", " ")
+                    if section_name != section['name']:
+                        tag = None
+                        paras = []
+                        section = {
+                            'idx': self.idx(),
+                            'name': section_name,
+                            'paras': paras
+                        }
+                        chapter['sections'].append(section)
+                        logging.debug("\t%s %s" % (len(chapter['sections']), section_name))
+                if chapter_name or section_name:
+                    continue
+
+                has_space = raw_text.startswith(u"    ") or raw_text.startswith(u"　　")
+                has_special = line.startswith("--") or line.startswith("==")
+                if line_style == LINE_STYLE_AUTO:
+                    if has_space:
+                        line_style = LINE_STYLE_APPEND
                     else:
-                        line = line.replace(tag_from, tag_to)
-
-            # 参数值
-            m = re.match(u'#([a-z]+):(.*)', line)
-            if m is not None:
-                tag, val = m.groups()
-                meta[tag] = val.strip()
-                continue
-
-            # 段落内容
-            m = re.match(u'##([a-z]+):(.*)', line)
-            if m is not None:
-                line_style = LINE_STYLE_AUTO  #reset line style
-                tag, val = m.groups()
-                paras = []
-                meta[tag] = paras
-                continue
-
-            chapter_name = None
-            section_name = None
-            # 多个段落内容（例如N个章节）
-            m = re.match(u'#@([a-z]+)(:：)(.*)', line)
-            if m is not None:
-                tag, _, val = m.groups()
-                if tag == 'chapter': chapter_name = val
-                if tag == 'section': section_name = val
-
-            while True:
-                # 猜测章节序号
-                m = None
-                for r in RE_CHAPTER_AND_SECTIONS:
-                    m = re.match(r, line)
-                    if m: break
-                if m is not None:
-                    vals = m.groups()
-                    chapter_name = vals[0]
-                    section_name = vals[1]
-                    break
-
-                # 猜测章节序号
-                m = None
-                for r in RE_CHAPTERS:
-                    m = re.match(r, line)
-                    if m: break
-                if m is not None:
-                    chapter_name = m.groups()[0]
-                    break
-
-                # 等效与 #@section:
-                m = None
-                for r in RE_SECTIONS:
-                    m = re.match(r, line)
-                    if m: break
-
-                if m is not None:
-                    section_name = m.groups()[0]
-                    break
-                break
-
-            if chapter_name:
-                chapter_name = chapter_name.strip().replace("  ", " ").replace(
-                    "  ", " ")
-                if chapter_name != chapter['name']:
-                    logging.debug(u'chapter: %s' % chapter_name)
-                    tag = None
-                    paras = []
-                    section = {'idx': self.idx(), 'name': u'_', 'paras': paras}
-                    chapter = {
-                        'idx': len(meta['chapters']),
-                        'name': chapter_name,
-                        'sections': [],
-                        'default': section
-                    }
-                    meta['chapters'].append(chapter)
-                    line_style = LINE_STYLE_AUTO  #reset line style
-
-            if section_name:
-                section_name = section_name.strip().replace("  ", " ").replace(
-                    "  ", " ")
-                if section_name != section['name']:
-                    tag = None
-                    paras = []
-                    section = {
-                        'idx': self.idx(),
-                        'name': section_name,
-                        'paras': paras
-                    }
-                    chapter['sections'].append(section)
-                    logging.debug("\t%s %s" %
-                                  (len(chapter['sections']), section_name))
-            if chapter_name or section_name:
-                continue
-
-            # 处理正文（增加换行检测）
-            has_space = raw.startswith(u"    ") or raw.startswith(u"　　")
-            has_special = line.startswith("--") or line.startswith("==")
-            if line_style == LINE_STYLE_AUTO:
-                if has_space: line_style = LINE_STYLE_APPEND
-                else: line_style = LINE_STYLE_MERGE
-            if line_style == LINE_STYLE_APPEND:
-                paras.append(line)
-            elif line_style == LINE_STYLE_MERGE:
-                if has_space or has_special or len(paras) == 0:
+                        line_style = LINE_STYLE_MERGE
+                if line_style == LINE_STYLE_APPEND:
                     paras.append(line)
-                else:
-                    paras[-1] += line
+                elif line_style == LINE_STYLE_MERGE:
+                    if has_space or has_special or len(paras) == 0:
+                        paras.append(line)
+                    else:
+                        paras[-1] += line
 
-            if tag == 'brief':
-                logging.debug(line)
-                logging.debug('\n'.join(meta[tag]))
+                if tag == 'brief':
+                    logging.debug(line)
+                    logging.debug('\n'.join(meta[tag]))
 
         if chapter['name'] == '_' and chapter['sections']:  #no chapter
             meta['sections'].extend(chapter['sections'])
